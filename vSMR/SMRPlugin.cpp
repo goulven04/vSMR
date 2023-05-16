@@ -613,7 +613,10 @@ void CSMRPlugin::OnTimer(int Counter)
 	BLINK = !BLINK;
 
 	if (HoppieConnected && ConnectionMessage) {
-		DisplayUserMessage("CPDLC", "Server", "Logged in!", true, true, false, true, false);
+		if (string(ControllerMyself().GetCallsign()).substr(0, 4) != logonCallsign) {
+			DisplayUserMessage("CPDLC", "Warning", string("CPDLC Callsign does not match your Euroscope Callsign " + string(ControllerMyself().GetCallsign())).c_str(), true, true, false, true, true);
+		}
+		DisplayUserMessage("CPDLC", "Server", string("Logged as " + logonCallsign + + "!").c_str(), true, true, false, true, false);
 		ConnectionMessage = false;
 	}
 
