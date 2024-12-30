@@ -1,0 +1,62 @@
+name: vSMR Build
+
+on:
+  push:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Command Prompt for Microsoft
+        uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x86
+
+      - name: Get commit short SHA
+        uses: benjlevesque/short-sha@v2.2
+        id: short-sha
+
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          version="${{ steps.short-sha.outputs.sha }}"
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            version=$(echo ${{ github.ref }} | sed -E 's/refs\/tags\/(v)?//g')
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Set version in header and resource files
+        run: |
+          (Get-Content vSMR\SMRPlugin.hpp).replace('@appveyor_build', '${{ steps.get_version.outputs.version }}') | Set-Content vSMR\SMRPlugin.hpp
+          (Get-Content vSMR\vSMR.rc).replace('@appveyor_build', '${{ steps.get_version.outputs.version }}') | Set-Content vSMR\vSMR.rc
+
+      - name: Build DLL
+        run: |
+          cd vSMR
+          msbuild "vSMR.sln" /p:Platform=x86 /p:Configuration=Release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vSMR.dll
+          path: vSMR/Release/vSMR.dll
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: vSMR version ${{ steps.get_version.outputs.version }}
+          prerelease: false
+          draft: true
+          files: |
+              vSMR/Release/vSMR.dll
+              vSMR/vSMR_Profiles.json
