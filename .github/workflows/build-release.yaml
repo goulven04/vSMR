@@ -41,7 +41,6 @@ jobs:
 
       - name: Build DLL
         run: |
-          cd vSMR
           msbuild "vSMR.sln" /p:Platform=x86 /p:Configuration=Release
 
       - name: Upload artifacts
