@@ -60,5 +60,5 @@ jobs:
           prerelease: false
           draft: true
           files: |
-              vSMR/Release/vSMR.dll
+              Release/vSMR.dll
               vSMR/vSMR_Profiles.json
